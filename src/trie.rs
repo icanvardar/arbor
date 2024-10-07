@@ -74,6 +74,40 @@ impl Trie {
             None => Ok(false),
         }
     }
+
+    pub fn suggest(self, prefix: &str) -> Result<Vec<String>, TrieError> {
+        let mut node = &self.root;
+        let mut current_letters = String::new();
+
+        for i in 0..prefix.len() {
+            let letter = prefix.as_bytes()[i] as char;
+
+            if let Some(child) = node.children.get(&letter) {
+                node = child.as_deref().unwrap();
+                current_letters.push(letter);
+            } else {
+                return Ok(Vec::new());
+            }
+        }
+
+        let mut suggestion_list: Vec<String> = Vec::new();
+
+        Self::consume_words(node, &mut suggestion_list, &mut current_letters);
+
+        return Ok(suggestion_list);
+    }
+
+    fn consume_words(node: &TrieNode, word_list: &mut Vec<String>, current_letters: &mut String) {
+        if node.word_ends {
+            word_list.push(current_letters.clone());
+        }
+
+        for (child_char, child_node) in &node.children {
+            current_letters.push(*child_char);
+            Self::consume_words(child_node.as_deref().unwrap(), word_list, current_letters);
+            current_letters.pop();
+        }
+    }
 }
 
 #[cfg(test)]
@@ -108,6 +142,31 @@ mod tests {
         let has_word = Trie::search(word.clone(), &trie.root, 0)?;
 
         assert!(has_word);
+
+        Ok(())
+    }
+
+    #[test]
+    fn it_suggests_words() -> Result<(), Box<dyn Error>> {
+        let mut trie = Trie::new();
+        let words = vec!["hello", "helicopter", "helium", "hall", "hundred"];
+        let expected = vec![
+            "hello".to_string(),
+            "helicopter".to_string(),
+            "helium".to_string(),
+        ];
+
+        for word in words {
+            Trie::insert(word.to_string(), &mut trie.root, 0)?;
+        }
+
+        let result = trie.suggest("hel")?;
+
+        for word in &result {
+            assert!(expected.contains(word));
+        }
+
+        assert_eq!(result.len(), 3);
 
         Ok(())
     }
