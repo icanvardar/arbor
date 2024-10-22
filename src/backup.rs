@@ -1,40 +1,49 @@
 use std::error::Error;
 use std::sync::Arc;
 use tokio::fs::{File, OpenOptions};
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 use tokio::sync::Mutex;
 
-const BACKUP_FILE_PATH: &str = "file";
+const BACKUP_FILE_PATH: &str = "/var/lib/arbor/backup";
 
 pub struct Backup {
+    pub file_path: String,
     file: Arc<Mutex<File>>,
 }
 
 impl Backup {
-    pub async fn build() -> Result<Self, Box<dyn Error>> {
+    pub async fn build<'a>(file_path: Option<&'a str>) -> Result<Self, Box<dyn Error>> {
+        let get_file_path = |path: Option<&'a str>| -> &str {
+            if path.is_some() {
+                return path.unwrap();
+            } else {
+                return BACKUP_FILE_PATH;
+            };
+        };
+
+        let path = get_file_path(file_path);
+
         let file = OpenOptions::new()
             .append(true)
             .read(true)
             .create(true)
-            .open(BACKUP_FILE_PATH)
+            .open(path)
             .await
             .expect("Could not open file");
 
         Ok(Self {
+            file_path: path.to_string(),
             file: Arc::new(Mutex::new(file)),
         })
     }
 
     pub async fn save_data(&self, words: Vec<String>) -> Result<(), Box<dyn Error>> {
-        let encoded_words = bincode::serialize(&words).expect("Could not encode");
-
         let mut file = self.file.lock().await;
-        file.write_all(&encoded_words)
-            .await
-            .expect("Could not write to file");
-        file.write_all(b"\n")
-            .await
-            .expect("Could not write to file");
+
+        for word in words {
+            file.write_all(word.as_bytes()).await?;
+            file.write_all(b"\n").await?;
+        }
 
         Ok(())
     }
@@ -42,27 +51,14 @@ impl Backup {
     pub async fn load_data(&self) -> Result<Vec<String>, Box<dyn Error>> {
         let mut file = self.file.lock().await;
 
-        let mut contents = Vec::new();
-        file.read_to_end(&mut contents)
-            .await
-            .expect("Could not read file!");
-        println!("contents: {:#?}", contents);
+        file.seek(std::io::SeekFrom::Start(0)).await?;
 
-        let lines = contents.split(|&byte| byte == b'\n');
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).await?;
 
-        let mut flattenend_v = Vec::new();
+        let lines: Vec<String> = contents.lines().map(|line| line.to_string()).collect();
 
-        for line in lines {
-            if line.is_empty() {
-                continue;
-            }
-
-            let decoded_v: Vec<String> =
-                bincode::deserialize(line).expect("Could not decodee vector");
-            flattenend_v.extend(decoded_v);
-        }
-
-        Ok(flattenend_v)
+        Ok(lines)
     }
 }
 
@@ -70,13 +66,13 @@ impl Backup {
 mod tests {
     use super::*;
 
-    async fn init_backup() -> Backup {
-        return Backup::build().await.unwrap();
+    async fn init_backup(file_path: Option<&str>) -> Backup {
+        return Backup::build(file_path).await.unwrap();
     }
 
     #[tokio::test]
     async fn it_builds_backup_file() {
-        let backup = init_backup().await;
+        let backup = init_backup(Some("file")).await;
         let file = backup.file.lock().await;
 
         assert!(file.metadata().await.unwrap().is_file());
@@ -84,7 +80,7 @@ mod tests {
 
     #[tokio::test]
     async fn it_saves_data() {
-        let backup = init_backup().await;
+        let backup = init_backup(Some("file")).await;
 
         let words = Vec::from([
             "hello".to_string(),
@@ -92,10 +88,12 @@ mod tests {
             "hundred".to_string(),
         ]);
 
-        backup.save_data(words).await.unwrap();
+        backup.save_data(words.clone()).await.unwrap();
 
-        let result = backup.load_data().await.unwrap();
+        let data_from_file = backup.load_data().await.unwrap();
 
-        println!("{:?}", result);
+        assert_eq!(data_from_file, words);
+
+        std::fs::remove_file(backup.file_path).unwrap();
     }
 }
