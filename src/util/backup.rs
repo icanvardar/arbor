@@ -12,16 +12,11 @@ pub struct Backup {
 }
 
 impl Backup {
-    pub async fn build<'a>(file_path: Option<&'a str>) -> Result<Self, Box<dyn Error>> {
-        let get_file_path = |path: Option<&'a str>| -> &str {
-            if path.is_some() {
-                return path.unwrap();
-            } else {
-                return BACKUP_FILE_PATH;
-            };
+    pub async fn build(file_path: Option<&str>) -> Result<Self, Box<dyn Error>> {
+        let path = match file_path {
+            Some(path) => path,
+            None => BACKUP_FILE_PATH,
         };
-
-        let path = get_file_path(file_path);
 
         let file = OpenOptions::new()
             .append(true)
