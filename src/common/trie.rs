@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::errors::TrieError;
+use crate::util::errors::TrieError;
 
 #[derive(Debug)]
 pub struct TrieNode {
