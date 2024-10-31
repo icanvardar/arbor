@@ -2,19 +2,10 @@ use std::collections::HashMap;
 
 use crate::util::errors::TrieError;
 
-#[derive(Debug)]
+#[derive(Default, Debug)]
 pub struct TrieNode {
     children: HashMap<char, Option<Box<TrieNode>>>,
     word_ends: bool,
-}
-
-impl Default for TrieNode {
-    fn default() -> Self {
-        Self {
-            children: HashMap::new(),
-            word_ends: false,
-        }
-    }
 }
 
 impl TrieNode {
@@ -23,6 +14,7 @@ impl TrieNode {
     }
 }
 
+#[derive(Default)]
 pub struct Trie {
     pub root: TrieNode,
 }
@@ -94,7 +86,7 @@ impl Trie {
 
         Self::consume_words(node, &mut suggestion_list, &mut current_letters);
 
-        return Ok(suggestion_list);
+        Ok(suggestion_list)
     }
 
     fn consume_words(node: &TrieNode, word_list: &mut Vec<String>, current_letters: &mut String) {
