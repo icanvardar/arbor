@@ -67,7 +67,7 @@ impl Trie {
         }
     }
 
-    pub fn suggest(self, prefix: &str) -> Result<Vec<String>, TrieError> {
+    pub fn suggest(&self, prefix: &str) -> Result<Vec<String>, TrieError> {
         let mut node = &self.root;
         let mut current_letters = String::new();
 
