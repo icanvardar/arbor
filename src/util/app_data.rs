@@ -50,6 +50,18 @@ impl AppData {
 
         Ok(app_data)
     }
+
+    pub fn get_language(&self) -> &str {
+        return self.language.as_ref();
+    }
+
+    pub fn get_thread_count(&self) -> u8 {
+        return self.thread_count;
+    }
+
+    pub fn get_max_suggestion(&self) -> u8 {
+        return self.max_suggestion;
+    }
 }
 
 #[cfg(test)]
@@ -60,15 +72,15 @@ mod tests {
     fn it_builds_app_data() -> Result<(), Box<dyn Error>> {
         let app_data = AppData::build(None, None, None)?;
 
-        assert_eq!(app_data.language, "en-US".to_string());
-        assert_eq!(app_data.thread_count, 2);
-        assert_eq!(app_data.max_suggestion, 10);
+        assert_eq!(app_data.get_language(), "en-US".to_string());
+        assert_eq!(app_data.get_thread_count(), 2);
+        assert_eq!(app_data.get_max_suggestion(), 10);
 
         let app_data = AppData::build(Some("tr-TR".to_string()), Some(4), Some(5))?;
 
-        assert_eq!(app_data.language, "tr-TR".to_string());
-        assert_eq!(app_data.thread_count, 4);
-        assert_eq!(app_data.max_suggestion, 5);
+        assert_eq!(app_data.get_language(), "tr-TR".to_string());
+        assert_eq!(app_data.get_thread_count(), 4);
+        assert_eq!(app_data.get_max_suggestion(), 5);
 
         let home_dir = dirs::home_dir().unwrap();
         let app_data_dir = home_dir.join(APP_DATA_DIR_RELATIVE_PATH);
