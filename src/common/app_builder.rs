@@ -13,6 +13,12 @@ pub struct Args {
 
     #[arg(short, long, default_value_t = 10)]
     max_suggestion: u8,
+
+    #[arg(short, long, default_value_t = false)]
+    backup: bool,
+
+    #[arg(short, long, requires("backup"))]
+    output: Option<String>,
 }
 
 pub trait AppBuilder {
