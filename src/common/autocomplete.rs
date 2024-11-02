@@ -75,4 +75,61 @@ mod tests {
     use std::error::Error;
 
     use super::*;
+
+    #[tokio::test]
+    async fn it_creates_autocomplete_instance() -> Result<(), Box<dyn Error>> {
+        let ac = Autocomplete::build(None, None, None, false, None).await?;
+
+        assert_eq!(ac.app_data.get_language(), "en-US");
+        assert!(ac.backup.is_none());
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn it_loads_backup() -> Result<(), Box<dyn Error>> {
+        let backup = Backup::build(None).await?;
+
+        let words = Vec::from(["hello".to_string(), "hi".to_string(), "hey".to_string()]);
+
+        backup.save_data(words.clone()).await?;
+
+        let mut ac = Autocomplete::build(None, None, None, true, None).await?;
+
+        ac.load_backup().await?;
+
+        let word_1 = ac.suggest_word("hell").await?;
+        let word_2 = ac.suggest_word("hi").await?;
+        let word_3 = ac.suggest_word("hey").await?;
+
+        assert_eq!(
+            Vec::from([
+                word_1.iter().nth(0).unwrap().to_owned(),
+                word_2.iter().nth(0).unwrap().to_owned(),
+                word_3.iter().nth(0).unwrap().to_owned(),
+            ]),
+            words
+        );
+
+        std::fs::remove_file(backup.file_path).unwrap();
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn it_inserts_word_and_suggests() -> Result<(), Box<dyn Error>> {
+        let mut ac = Autocomplete::build(None, None, None, false, None).await?;
+
+        let word = "test".to_string();
+
+        ac.insert_word(word.clone()).await?;
+
+        let suggestion = ac.suggest_word(word.as_str()).await?;
+
+        let suggestion = suggestion.iter().nth(0).unwrap().to_owned();
+
+        assert_eq!(word, suggestion);
+
+        Ok(())
+    }
 }
