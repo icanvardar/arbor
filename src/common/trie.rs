@@ -8,12 +8,6 @@ pub struct TrieNode {
     word_ends: bool,
 }
 
-impl TrieNode {
-    fn new() -> Self {
-        Self::default()
-    }
-}
-
 #[derive(Default)]
 pub struct Trie {
     pub root: TrieNode,
@@ -22,7 +16,7 @@ pub struct Trie {
 impl Trie {
     pub fn new() -> Self {
         Self {
-            root: TrieNode::new(),
+            root: TrieNode::default(),
         }
     }
 
@@ -41,7 +35,7 @@ impl Trie {
         let child = node
             .children
             .entry(c)
-            .or_insert_with(|| Some(Box::new(TrieNode::new())));
+            .or_insert_with(|| Some(Box::new(TrieNode::default())));
 
         if let Some(child) = child {
             Self::insert(word, child.as_mut(), position + 1)?;
@@ -110,7 +104,7 @@ mod tests {
 
     #[test]
     fn it_initializes_trie_node() {
-        let trie_node = TrieNode::new();
+        let trie_node = TrieNode::default();
 
         assert_eq!(trie_node.children.len(), 0);
         assert_eq!(trie_node.word_ends, false);
