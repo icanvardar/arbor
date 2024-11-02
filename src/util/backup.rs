@@ -4,7 +4,9 @@ use tokio::fs::{File, OpenOptions};
 use tokio::io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt};
 use tokio::sync::Mutex;
 
-const BACKUP_FILE_PATH: &str = "/var/lib/arbor/backup";
+// TODO: find out how to switch back to this path => "/var/lib/arbor/backup"
+// in production mode
+const BACKUP_FILE_PATH: &str = "/tmp/arbor/backup";
 
 pub struct Backup {
     pub file_path: String,
@@ -13,10 +15,15 @@ pub struct Backup {
 
 impl Backup {
     pub async fn build(file_path: Option<&str>) -> Result<Self, Box<dyn Error>> {
-        let path = match file_path {
+        let path = std::path::Path::new(match file_path {
             Some(path) => path,
             None => BACKUP_FILE_PATH,
-        };
+        });
+
+        if !path.exists() {
+            let prefix = path.parent().unwrap();
+            std::fs::create_dir_all(prefix).unwrap();
+        }
 
         let file = OpenOptions::new()
             .append(true)
@@ -27,7 +34,7 @@ impl Backup {
             .expect("Could not open file");
 
         Ok(Self {
-            file_path: path.to_string(),
+            file_path: path.to_str().unwrap().to_owned(),
             file: Arc::new(Mutex::new(file)),
         })
     }

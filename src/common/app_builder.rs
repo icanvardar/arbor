@@ -1,35 +1,58 @@
-use std::error::Error;
+use std::{error::Error, pin::Pin};
 
 use clap::Parser;
+
+use super::autocomplete::Autocomplete;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {
-    #[arg(short, long, default_value = "en-US")]
-    language: String,
+    #[arg(short, long)]
+    language: Option<String>,
 
-    #[arg(short, long, default_value_t = 2)]
-    thread_count: u8,
+    #[arg(short, long)]
+    thread_count: Option<u8>,
 
-    #[arg(short, long, default_value_t = 10)]
-    max_suggestion: u8,
+    #[arg(short, long)]
+    max_suggestion: Option<u8>,
+
+    #[arg(short, long, default_value_t = false)]
+    backup: bool,
+
+    #[arg(short, long, requires("backup"))]
+    output: Option<String>,
 }
 
 pub trait AppBuilder {
-    fn get_args(&self) -> &Args;
+    fn build(
+    ) -> Pin<Box<dyn core::future::Future<Output = Result<Autocomplete, Box<dyn Error>>> + Send>>
+    where
+        Self: Sync,
+    {
+        Box::pin(async move {
+            let args = Args::parse();
 
-    fn build(&self) -> Result<(), Box<dyn Error>> {
-        let _args = self.get_args();
+            let output = if let Some(ref o) = args.output {
+                Some(o.as_str())
+            } else {
+                None
+            };
 
-        Ok(())
+            Ok(Autocomplete::build(
+                args.language.clone(),
+                args.thread_count,
+                args.max_suggestion,
+                args.backup,
+                output,
+            )
+            .await?)
+        })
     }
 }
 
-impl AppBuilder for Args {
-    fn get_args(&self) -> &Args {
-        self
-    }
-}
+pub struct Arbor;
+
+impl AppBuilder for Arbor {}
 
 #[cfg(test)]
 mod tests {
@@ -39,9 +62,23 @@ mod tests {
 
     #[test]
     fn it_initializes_args() -> Result<(), Box<dyn Error>> {
-        let args = get_args(&["arbor"])?;
+        let args = get_args(&["arbor", "--language", "en-US"])?;
 
-        assert_eq!(args.language, "en-US");
+        assert_eq!(args.language, Some("en-US".to_string()));
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn it_builds_app() -> Result<(), Box<dyn Error>> {
+        let mut arbor = Arbor::build().await?;
+        let word = "hello".to_string();
+
+        arbor.insert_word(word.clone()).await?;
+
+        let suggestion = arbor.suggest_word("hel").await?;
+
+        assert_eq!(suggestion.iter().nth(0).unwrap().to_owned(), word);
 
         Ok(())
     }
@@ -54,3 +91,4 @@ mod tests {
         return Ok(Args::try_parse_from(itr)?);
     }
 }
+

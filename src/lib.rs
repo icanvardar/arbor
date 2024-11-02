@@ -1,5 +1,6 @@
 pub mod common {
     pub mod app_builder;
+    pub mod autocomplete;
     pub mod trie;
 }
 pub mod util {
