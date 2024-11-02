@@ -5,14 +5,14 @@ use clap::Parser;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {
-    #[arg(short, long, default_value = "en-US")]
-    language: String,
+    #[arg(short, long)]
+    language: Option<String>,
 
-    #[arg(short, long, default_value_t = 2)]
-    thread_count: u8,
+    #[arg(short, long)]
+    thread_count: Option<u8>,
 
-    #[arg(short, long, default_value_t = 10)]
-    max_suggestion: u8,
+    #[arg(short, long)]
+    max_suggestion: Option<u8>,
 
     #[arg(short, long, default_value_t = false)]
     backup: bool,
@@ -45,9 +45,9 @@ mod tests {
 
     #[test]
     fn it_initializes_args() -> Result<(), Box<dyn Error>> {
-        let args = get_args(&["arbor"])?;
+        let args = get_args(&["arbor", "--language", "en-US"])?;
 
-        assert_eq!(args.language, "en-US");
+        assert_eq!(args.language, Some("en-US".to_string()));
 
         Ok(())
     }
