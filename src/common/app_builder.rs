@@ -24,8 +24,7 @@ pub struct Args {
 }
 
 pub trait AppBuilder {
-    fn build(
-    ) -> Pin<Box<dyn core::future::Future<Output = Result<Autocomplete, Box<dyn Error>>> + Send>>
+    fn build() -> Pin<Box<dyn core::future::Future<Output = Result<Arbor, Box<dyn Error>>> + Send>>
     where
         Self: Sync,
     {
@@ -38,19 +37,23 @@ pub trait AppBuilder {
                 None
             };
 
-            Ok(Autocomplete::build(
-                args.language.clone(),
-                args.thread_count,
-                args.max_suggestion,
-                args.backup,
-                output,
-            )
-            .await?)
+            Ok(Arbor {
+                autocomplete: Autocomplete::build(
+                    args.language.clone(),
+                    args.thread_count,
+                    args.max_suggestion,
+                    args.backup,
+                    output,
+                )
+                .await?,
+            })
         })
     }
 }
 
-pub struct Arbor;
+pub struct Arbor {
+    pub autocomplete: Autocomplete,
+}
 
 impl AppBuilder for Arbor {}
 
@@ -74,9 +77,9 @@ mod tests {
         let mut arbor = Arbor::build().await?;
         let word = "hello".to_string();
 
-        arbor.insert_word(word.clone()).await?;
+        arbor.autocomplete.insert_word(word.clone()).await?;
 
-        let suggestion = arbor.suggest_word("hel").await?;
+        let suggestion = arbor.autocomplete.suggest_word("hel").await?;
 
         assert_eq!(suggestion.iter().nth(0).unwrap().to_owned(), word);
 
@@ -91,4 +94,3 @@ mod tests {
         return Ok(Args::try_parse_from(itr)?);
     }
 }
-
