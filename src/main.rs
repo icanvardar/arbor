@@ -1,10 +1,10 @@
 use std::error::Error;
 
-use arbor::common::app_builder::{AppBuilder, Arbor};
+use arbor::util::repl::Repl;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    Arbor::build().await?;
+    Repl::new().await?.run().await?;
 
     Ok(())
 }
