@@ -52,15 +52,15 @@ impl AppData {
     }
 
     pub fn get_language(&self) -> &str {
-        return self.language.as_ref();
+        self.language.as_ref()
     }
 
     pub fn get_thread_count(&self) -> u8 {
-        return self.thread_count;
+        self.thread_count
     }
 
     pub fn get_max_suggestion(&self) -> u8 {
-        return self.max_suggestion;
+        self.max_suggestion
     }
 }
 
