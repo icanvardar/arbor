@@ -11,7 +11,7 @@ use std::{
     io::{self, Write},
 };
 
-use crate::common::app_builder::{AppBuilder, Arbor};
+use crate::common::app_builder::Arbor;
 
 pub struct Repl {
     arbor: Arbor,
@@ -41,7 +41,7 @@ impl Repl {
                 if let Event::Key(event) = event::read()? {
                     match event.code {
                         KeyCode::Char(' ') => {
-                            if self.input.len() == 0 {
+                            if self.input.is_empty() {
                                 continue;
                             }
 
@@ -67,7 +67,7 @@ impl Repl {
                             self.selected_suggestion = 0;
                         }
                         KeyCode::Backspace => {
-                            if self.input.len() == 0 {
+                            if self.input.is_empty() {
                                 continue;
                             }
 
@@ -112,7 +112,7 @@ impl Repl {
                             self.selected_suggestion += 1;
                         }
                         KeyCode::Tab => {
-                            if self.input.len() == 0 {
+                            if self.input.is_empty() {
                                 continue;
                             }
 
