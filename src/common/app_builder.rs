@@ -1,4 +1,4 @@
-use std::{error::Error, pin::Pin};
+use std::error::Error;
 
 use clap::Parser;
 
@@ -23,30 +23,23 @@ pub struct Args {
     output: Option<String>,
 }
 
-pub trait AppBuilder {
-    fn build() -> Pin<Box<dyn core::future::Future<Output = Result<Arbor, Box<dyn Error>>> + Send>>
+impl Arbor {
+    pub async fn build() -> Result<Arbor, Box<dyn Error>>
     where
         Self: Sync,
     {
-        Box::pin(async move {
-            let args = Args::parse();
+        let args = Args::parse();
+        let output = args.output.as_deref();
 
-            let output = if let Some(ref o) = args.output {
-                Some(o.as_str())
-            } else {
-                None
-            };
-
-            Ok(Arbor {
-                autocomplete: Autocomplete::build(
-                    args.language.clone(),
-                    args.thread_count,
-                    args.max_suggestion,
-                    args.backup,
-                    output,
-                )
-                .await?,
-            })
+        Ok(Arbor {
+            autocomplete: Autocomplete::build(
+                args.language.clone(),
+                args.thread_count,
+                args.max_suggestion,
+                args.backup,
+                output,
+            )
+            .await?,
         })
     }
 }
@@ -54,8 +47,6 @@ pub trait AppBuilder {
 pub struct Arbor {
     pub autocomplete: Autocomplete,
 }
-
-impl AppBuilder for Arbor {}
 
 #[cfg(test)]
 mod tests {
