@@ -2,6 +2,11 @@
 name = "arbor"
 version = "0.1.0"
 edition = "2021"
+authors = ["Can Vardar <https://github.com/icanvardar>"]
+description = "A trie-based auto-completion tool."
+readme = "./README.md"
+license-file = "./LICENSE"
+keywords = ["autocomplete", "cli", "trie"]
 
 [dependencies]
 bincode = "1.3.3"
