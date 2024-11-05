@@ -10,7 +10,7 @@ In interactive mode, Arbor will prompt you to enter words or prefixes. Based on 
 2. **Autocomplete Suggestions**: Type a prefix and press Enter to see a list of words that match the prefix.
 
 ### Example:
-![example](example.gif)
+![tutorial](tutorial.gif)
 
 ## Features
 
