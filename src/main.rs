@@ -1,6 +1,6 @@
 use std::error::Error;
 
-use arbor::util::repl::Repl;
+use arbor_cli::util::repl::Repl;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
