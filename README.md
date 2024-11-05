@@ -23,7 +23,7 @@ In interactive mode, Arbor will prompt you to enter words or prefixes. Based on 
 You can install Arbor using Cargo:
 
 ```bash
-cargo install arbor
+cargo install arbor-cli
 ```
 
 ## Usage
@@ -31,7 +31,7 @@ cargo install arbor
 After installation, simply run `arbor` in your terminal:
 
 ```bash
-arbor
+arbor-cli
 ```
 
 ### Command-Line Options
